@@ -5,32 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import CategoryCard from '@/components/CategoryCard';
-import { getProducts, getCategories, products, categories } from '@/services/mockData';
+import { fetchProducts, fetchCategories, Product, Category } from '@/services/api';
 
 const Home = () => {
-  const [featuredProducts, setFeaturedProducts] = useState(products.slice(0, 4));
-  const [featuredCategories, setFeaturedCategories] = useState(categories);
+  const { data: products, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts
+  });
   
-  useEffect(() => {
-    // In a real app, we would fetch from API
-    // For now, we'll use the mock data
-    const fetchData = async () => {
-      try {
-        const productData = await getProducts();
-        const categoryData = await getCategories();
-        setFeaturedProducts(productData.slice(0, 4));
-        setFeaturedCategories(categoryData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-    
-    fetchData();
-  }, []);
+  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories
+  });
+  
+  const featuredProducts = products?.slice(0, 4) || [];
   
   return (
     <>
@@ -75,16 +68,21 @@ const Home = () => {
                 </Link>
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredCategories.map((category) => (
-                <CategoryCard 
-                  key={category.id} 
-                  name={category.name} 
-                  imageUrl={category.imageUrl} 
-                  count={category.productCount} 
-                />
-              ))}
-            </div>
+            
+            {isLoadingCategories ? (
+              <div className="text-center py-8">Loading categories...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {categories?.map((category) => (
+                  <CategoryCard 
+                    key={category.id} 
+                    name={category.name} 
+                    imageUrl={`https://source.unsplash.com/featured/?${category.name.toLowerCase()},furniture`} 
+                    count={products?.filter(p => p.category_id === category.id).length || 0} 
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
         
@@ -100,21 +98,26 @@ const Home = () => {
                 </Link>
               </Button>
             </div>
-            <div className="product-grid">
-              {featuredProducts.map((product) => {
-                const category = categories.find(c => c.id === product.categoryId);
-                return (
-                  <ProductCard 
-                    key={product.id} 
-                    id={product.id} 
-                    name={product.name} 
-                    price={product.price} 
-                    imageUrl={product.imageUrl} 
-                    category={category?.name || 'Furniture'} 
-                  />
-                );
-              })}
-            </div>
+            
+            {isLoadingProducts ? (
+              <div className="text-center py-8">Loading products...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => {
+                  const category = categories?.find(c => c.id === product.category_id);
+                  return (
+                    <ProductCard 
+                      key={product.id} 
+                      id={product.id} 
+                      name={product.name} 
+                      price={product.price} 
+                      imageUrl={product.imageUrl} 
+                      category={category?.name || 'Furniture'} 
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
         

@@ -1,118 +1,199 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Heart, Menu, X, User, Search } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 
 const NavBar = () => {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { user, signOut } = useAuth();
+  const { itemCount } = useCart();
+  
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
   
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4 mt-8">
-                <Link to="/" className="text-lg font-medium hover:text-primary">Home</Link>
-                <Link to="/products" className="text-lg font-medium hover:text-primary">Shop</Link>
-                <Link to="/categories" className="text-lg font-medium hover:text-primary">Categories</Link>
-                <Link to="/about" className="text-lg font-medium hover:text-primary">About</Link>
-                <Link to="/contact" className="text-lg font-medium hover:text-primary">Contact</Link>
-              </nav>
-            </SheetContent>
-          </Sheet>
+    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+      <nav className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="text-2xl font-bold text-primary">ComfyCube</Link>
           
-          <Link to="/" className="text-xl font-bold tracking-tight">
-            ComfyCube
-          </Link>
-          
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
-              Home
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/products" className="text-gray-600 hover:text-primary transition-colors">
+              Products
             </Link>
-            <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">
-              Shop
-            </Link>
-            <Link to="/categories" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/categories" className="text-gray-600 hover:text-primary transition-colors">
               Categories
             </Link>
-            <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/about" className="text-gray-600 hover:text-primary transition-colors">
               About
             </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/contact" className="text-gray-600 hover:text-primary transition-colors">
               Contact
             </Link>
-          </nav>
+          </div>
+          
+          {/* Desktop Action Icons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/search">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+              </Link>
+            </Button>
+            
+            {user ? (
+              <>
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/wishlist">
+                    <Heart className="h-5 w-5" />
+                    <span className="sr-only">Wishlist</span>
+                  </Link>
+                </Button>
+                
+                <Button variant="ghost" size="icon" asChild className="relative">
+                  <Link to="/cart">
+                    <ShoppingCart className="h-5 w-5" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {itemCount}
+                      </span>
+                    )}
+                    <span className="sr-only">Cart</span>
+                  </Link>
+                </Button>
+                
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/account">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Account</span>
+                  </Link>
+                </Button>
+                
+                <Button variant="outline" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
+          </div>
+          
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleMenu}
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
         </div>
         
-        <div className="flex items-center gap-4">
-          {isSearchOpen ? (
-            <div className="flex items-center">
-              <Input 
-                type="search" 
-                placeholder="Search for products..." 
-                className="w-[200px] mr-2" 
-                autoFocus
-              />
-              <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(false)}>
-                <X className="h-5 w-5" />
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 space-y-4 pb-4">
+            <Link 
+              to="/products" 
+              className="block text-gray-600 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Products
+            </Link>
+            <Link 
+              to="/categories" 
+              className="block text-gray-600 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Categories
+            </Link>
+            <Link 
+              to="/about" 
+              className="block text-gray-600 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              About
+            </Link>
+            <Link 
+              to="/contact" 
+              className="block text-gray-600 hover:text-primary transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact
+            </Link>
+            
+            <div className="flex items-center space-x-4 pt-2 border-t">
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/search" onClick={() => setIsMenuOpen(false)}>
+                  <Search className="h-5 w-5" />
+                  <span className="sr-only">Search</span>
+                </Link>
               </Button>
+              
+              {user ? (
+                <>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}>
+                      <Heart className="h-5 w-5" />
+                      <span className="sr-only">Wishlist</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="icon" asChild className="relative">
+                    <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
+                      <ShoppingCart className="h-5 w-5" />
+                      {itemCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {itemCount}
+                        </span>
+                      )}
+                      <span className="sr-only">Cart</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/account" onClick={() => setIsMenuOpen(false)}>
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Account</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="outline" onClick={() => {
+                    handleSignOut();
+                    setIsMenuOpen(false);
+                  }}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button asChild>
+                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>Sign In</Link>
+                </Button>
+              )}
             </div>
-          ) : (
-            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Search</span>
-            </Button>
-          )}
-          
-          <Link to="/wishlist">
-            <Button variant="ghost" size="icon" className="relative">
-              <Heart className="h-5 w-5" />
-              {wishlistCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0">
-                  {wishlistCount}
-                </Badge>
-              )}
-              <span className="sr-only">Wishlist</span>
-            </Button>
-          </Link>
-          
-          <Link to="/cart">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0">
-                  {cartItemCount}
-                </Badge>
-              )}
-              <span className="sr-only">Cart</span>
-            </Button>
-          </Link>
-          
-          <Link to="/login">
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-              <span className="sr-only">Account</span>
-            </Button>
-          </Link>
-        </div>
-      </div>
+          </div>
+        )}
+      </nav>
     </header>
   );
 };
