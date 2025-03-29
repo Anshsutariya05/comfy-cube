@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   id: string;
@@ -14,20 +16,44 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, category }) => {
+  const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlist();
+  const { addItem: addToCart } = useCart();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  
+  // Check if product is in wishlist
+  useEffect(() => {
+    setIsWishlisted(isInWishlist(id));
+  }, [id, isInWishlist]);
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // This would normally dispatch to a cart context or state management
+    addToCart({
+      id,
+      name,
+      price,
+      imageUrl
+    });
     toast.success(`${name} added to cart`);
   };
   
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (isWishlisted) {
+      removeFromWishlist(id);
+    } else {
+      addToWishlist({
+        id,
+        name,
+        price,
+        imageUrl,
+        category
+      });
+    }
+    
     setIsWishlisted(!isWishlisted);
-    toast.success(isWishlisted ? `${name} removed from wishlist` : `${name} added to wishlist`);
   };
   
   return (
@@ -37,7 +63,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
           <img 
             src={imageUrl || '/placeholder.svg'} 
             alt={name}
-            className="product-image"
+            className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">
             <Button 
@@ -47,7 +73,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
               onClick={handleToggleWishlist}
             >
               <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-destructive text-destructive' : ''}`} />
-              <span className="sr-only">Add to wishlist</span>
+              <span className="sr-only">
+                {isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              </span>
             </Button>
           </div>
         </div>
