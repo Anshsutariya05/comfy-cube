@@ -11,6 +11,7 @@ export interface Product {
   imageUrl: string;
   measurements: string;
   category_id: string;
+  category?: string;  // Optional field for joined category name
   created_at?: string;
 }
 
@@ -50,7 +51,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
 export const fetchProductById = async (id: string): Promise<Product> => {
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select('*, categories(name)')
     .eq('id', id)
     .single();
   
@@ -61,8 +62,33 @@ export const fetchProductById = async (id: string): Promise<Product> => {
   
   return {
     ...data,
-    imageUrl: data.image_url
+    imageUrl: data.image_url,
+    category: data.categories?.name
   };
+};
+
+// Alias for fetchProductById to match what's used in ProductDetail.tsx
+export const fetchProduct = fetchProductById;
+
+// Get similar products (products in the same category, excluding the current one)
+export const fetchSimilarProducts = async (categoryId: string, currentProductId: string): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*, categories(name)')
+    .eq('category_id', categoryId)
+    .neq('id', currentProductId)
+    .limit(4);
+  
+  if (error) {
+    console.error(`Error fetching similar products:`, error);
+    throw error;
+  }
+  
+  return data.map(product => ({
+    ...product,
+    imageUrl: product.image_url,
+    category: product.categories?.name
+  }));
 };
 
 // Get all categories

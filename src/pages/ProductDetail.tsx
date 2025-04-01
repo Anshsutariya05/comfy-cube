@@ -18,10 +18,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { toast } from 'sonner';
 import { ArrowLeft, Heart, Minus, Plus, ShoppingCart } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { fetchProduct, fetchSimilarProducts, Product } from '@/services/api';
@@ -81,8 +79,7 @@ const ProductDetail = () => {
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrl,
-      quantity,
-    });
+    }, quantity);
     
     toast.success(`${quantity} × ${product.name} added to cart`, {
       description: "Go to cart to checkout.",
@@ -180,7 +177,7 @@ const ProductDetail = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{product.name}</BreadcrumbPage>
+              <span className="font-normal text-foreground">{product.name}</span>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
