@@ -46,11 +46,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, fetchCategories, Product, Category } from '@/services/api';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { isAdmin, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
@@ -72,40 +73,6 @@ const AdminDashboard = () => {
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  
-  // Check if user is admin
-  React.useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('You must be logged in to access the admin dashboard');
-        navigate('/auth');
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error || !data) {
-        toast.error('Failed to verify admin status');
-        navigate('/');
-        return;
-      }
-      
-      if (data.role !== 'admin') {
-        toast.error('You do not have permission to access this page');
-        navigate('/');
-        return;
-      }
-      
-      setIsAdmin(true);
-    };
-    
-    checkAdmin();
-  }, [navigate]);
   
   // Fetch products and categories
   const { data: products, isLoading: isLoadingProducts } = useQuery({
@@ -132,7 +99,15 @@ const AdminDashboard = () => {
     mutationFn: async (product: Omit<Product, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([{
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          quantity: product.quantity,
+          image_url: product.imageUrl,
+          measurements: product.measurements,
+          category_id: product.category_id
+        }])
         .select()
         .single();
       
@@ -285,7 +260,7 @@ const AdminDashboard = () => {
       description: productForm.description,
       price: parseFloat(productForm.price),
       quantity: parseInt(productForm.quantity),
-      image_url: productForm.imageUrl,
+      imageUrl: productForm.imageUrl,
       measurements: productForm.measurements,
       category_id: productForm.categoryId
     };
@@ -358,12 +333,24 @@ const AdminDashboard = () => {
     setSelectedProduct(null);
   };
   
-  if (!isAdmin) {
+  if (authLoading) {
     return (
       <>
         <NavBar />
         <main className="container py-8 mt-16">
           <div className="text-center py-12">Verifying admin access...</div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+  
+  if (!isAdmin) {
+    return (
+      <>
+        <NavBar />
+        <main className="container py-8 mt-16">
+          <div className="text-center py-12">You do not have access to this page.</div>
         </main>
         <Footer />
       </>

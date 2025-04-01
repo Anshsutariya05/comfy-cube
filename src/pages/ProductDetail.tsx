@@ -1,79 +1,63 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  fetchProduct,
+  fetchSimilarProducts,
+  Product,
+  addToCart as addToCartApi,
+} from '@/services/api';
+import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { ArrowLeft, Heart, Minus, Plus, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { fetchProduct, fetchSimilarProducts, Product } from '@/services/api';
-import ProductCard from '@/components/ProductCard';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, ArrowRight, ShoppingCart } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
-
-const dummyImages = [
-  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1470&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1632&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?q=80&w=1470&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1558&auto=format&fit=crop',
-];
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
-  const [isInWishlist, setIsInWishlist] = useState(false);
-  
-  const { addItem: addToCart } = useCart();
-  const { isInWishlist: checkWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlist();
 
-  // Fetch product data
-  const { data: product, isLoading, error } = useQuery({
+  const { data: product, isLoading, isError } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => fetchProduct(id || ''),
-    enabled: !!id,
+    queryFn: () => fetchProduct(id!),
   });
 
-  // Fetch similar products
-  const { data: similarProducts } = useQuery({
-    queryKey: ['similar-products', product?.category_id],
-    queryFn: () => fetchSimilarProducts(product?.category_id || '', id || ''),
-    enabled: !!product?.category_id,
+  const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery({
+    queryKey: ['similarProducts', product?.category_id, id],
+    queryFn: () => fetchSimilarProducts(product?.category_id!, id!),
+    enabled: !!product?.category_id, // Only fetch when product and categoryId are available
   });
 
-  // Check if product is in wishlist
-  useEffect(() => {
-    if (id) {
-      setIsInWishlist(checkWishlist(id));
+  const incrementQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
     }
-  }, [id, checkWishlist]);
+  };
 
-  const handleQuantityChange = (delta: number) => {
-    setQuantity(prev => {
-      const newValue = prev + delta;
-      return Math.max(1, Math.min(newValue, product?.quantity || 10));
-    });
+  const addToCart = async (product: Product, quantity: number) => {
+    try {
+      await addToCartApi(product.id, quantity);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
-    
     addToCart({
       id: product.id,
       name: product.name,
@@ -83,78 +67,39 @@ const ProductDetail = () => {
     
     toast.success(`${quantity} × ${product.name} added to cart`, {
       description: "Go to cart to checkout.",
-      action: {
-        label: "View Cart",
-        onClick: () => window.location.href = "/cart",
-      },
     });
   };
-
-  const handleToggleWishlist = () => {
-    if (!product) return;
-    
-    if (isInWishlist) {
-      removeFromWishlist(product.id);
-      setIsInWishlist(false);
-      toast.success(`${product.name} removed from wishlist`);
-    } else {
-      addToWishlist({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        imageUrl: product.imageUrl,
-        category: product.category || '',
-      });
-      setIsInWishlist(true);
-      toast.success(`${product.name} added to wishlist`, {
-        action: {
-          label: "View Wishlist",
-          onClick: () => window.location.href = "/wishlist",
-        },
-      });
-    }
-  };
-
-  // Select a random dummy image if product image is not available
-  const getProductImage = (index: number) => {
-    if (!product || !product.imageUrl) {
-      return dummyImages[index % dummyImages.length];
-    }
-    return product.imageUrl;
-  };
-
-  // Use dummy images for thumbnails
-  const thumbnailImages = dummyImages.slice(0, 4);
 
   if (isLoading) {
     return (
       <>
         <NavBar />
         <main className="container py-8 mt-16">
-          <div className="h-96 flex items-center justify-center">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-16 w-16 rounded-full bg-slate-200 mb-4"></div>
-              <div className="h-6 w-40 bg-slate-200 rounded"></div>
-            </div>
-          </div>
+          <div className="text-center py-12">Loading product details...</div>
         </main>
         <Footer />
       </>
     );
   }
 
-  if (error || !product) {
+  if (isError) {
     return (
       <>
         <NavBar />
         <main className="container py-8 mt-16">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
-            <p className="mb-8">The product you're looking for doesn't exist or has been removed.</p>
-            <Button asChild>
-              <Link to="/products"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Products</Link>
-            </Button>
-          </div>
+          <div className="text-center py-12">Error loading product details. Please try again.</div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!product) {
+    return (
+      <>
+        <NavBar />
+        <main className="container py-8 mt-16">
+          <div className="text-center py-12">Product not found.</div>
         </main>
         <Footer />
       </>
@@ -164,197 +109,96 @@ const ProductDetail = () => {
   return (
     <>
       <NavBar />
+      
       <main className="container py-8 mt-16 animate-fade-in">
-        {/* Breadcrumbs */}
-        <Breadcrumb className="mb-8">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/products">Products</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <span className="font-normal text-foreground">{product.name}</span>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
         {/* Product Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-          {/* Product Images */}
-          <div className="space-y-4 transition-all duration-300">
-            <div className="relative overflow-hidden rounded-lg bg-slate-100 aspect-square">
-              <img 
-                src={getProductImage(activeImage)} 
-                alt={product.name} 
-                className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className={`absolute top-4 right-4 rounded-full transition-all duration-300 ${
-                  isInWishlist ? 'bg-red-50 border-red-200' : 'bg-white'
-                }`}
-                onClick={handleToggleWishlist}
-              >
-                <Heart 
-                  className={`h-5 w-5 transition-colors duration-300 ${
-                    isInWishlist ? 'fill-red-500 text-red-500' : ''
-                  }`} 
-                />
-                <span className="sr-only">
-                  {isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                </span>
-              </Button>
-            </div>
-            
-            <div className="flex space-x-4">
-              {thumbnailImages.map((img, i) => (
-                <button 
-                  key={i}
-                  className={`relative rounded-md overflow-hidden w-24 h-24 transition-all duration-300 ${
-                    activeImage === i ? 'ring-2 ring-primary ring-offset-2' : 'opacity-70 hover:opacity-100'
-                  }`}
-                  onClick={() => setActiveImage(i)}
-                >
-                  <img 
-                    src={img} 
-                    alt={`${product.name} - view ${i+1}`} 
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
-                </button>
-              ))}
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Product Image */}
+          <div>
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-auto rounded-lg shadow-md"
+            />
           </div>
-
+          
           {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              {product.category && (
-                <Badge variant="outline" className="mb-2 transition-all duration-300 hover:bg-primary/5">
-                  {product.category}
-                </Badge>
-              )}
-              <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-              <div className="mt-2 flex items-center">
-                <p className="text-2xl font-semibold">${product.price.toFixed(2)}</p>
-                {product.quantity < 10 && (
-                  <Badge variant="secondary" className="ml-4">
-                    Only {product.quantity} left
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <p className="text-gray-600 leading-relaxed">{product.description}</p>
-
-            {product.measurements && (
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <p className="font-medium mb-2">Dimensions</p>
-                <p className="text-sm text-muted-foreground">{product.measurements}</p>
-              </div>
-            )}
-
-            {/* Quantity Selector and Add to Cart */}
-            <div className="pt-2">
-              <p className="font-medium mb-3">Quantity</p>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center border rounded-md">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1}
-                    className="h-10 w-10 transition-all duration-200"
-                  >
-                    <Minus className="h-4 w-4" />
-                    <span className="sr-only">Decrease quantity</span>
-                  </Button>
-                  <span className="w-10 text-center font-medium">{quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= product.quantity}
-                    className="h-10 w-10 transition-all duration-200"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only">Increase quantity</span>
-                  </Button>
-                </div>
-
-                <Button 
-                  onClick={handleAddToCart}
-                  className="flex-1 transition-all duration-300 hover:shadow-md transform hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Add to Cart
+          <div>
+            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+            <p className="text-gray-600 mb-4">{product.description}</p>
+            <p className="text-2xl font-semibold text-primary mb-4">
+              {formatCurrency(product.price)}
+            </p>
+            
+            {/* Quantity Selector */}
+            <div className="flex items-center mb-4">
+              <Label htmlFor="quantity" className="mr-2 text-sm font-medium">Quantity:</Label>
+              <div className="flex items-center">
+                <Button variant="outline" size="icon" onClick={decrementQuantity} disabled={quantity <= 1}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  id="quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value))}
+                  className="w-20 text-center mx-2"
+                />
+                <Button variant="outline" size="icon" onClick={incrementQuantity}>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-
-            {/* Product Details in Accordion */}
-            <div className="pt-4">
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="w-full">
-                  <TabsTrigger value="details" className="flex-1 transition-all duration-300">Details</TabsTrigger>
-                  <TabsTrigger value="shipping" className="flex-1 transition-all duration-300">Shipping</TabsTrigger>
-                  <TabsTrigger value="returns" className="flex-1 transition-all duration-300">Returns</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details" className="pt-4 animate-fade-in">
-                  <div className="space-y-4">
-                    <p className="text-sm">{product.description}</p>
-                    {product.measurements && (
-                      <div>
-                        <h4 className="font-medium mb-1">Dimensions</h4>
-                        <p className="text-sm text-muted-foreground">{product.measurements}</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="shipping" className="pt-4 animate-fade-in">
-                  <div className="space-y-4">
-                    <p className="text-sm">Free shipping on all orders over $100.</p>
-                    <p className="text-sm">Orders typically ship within 2-3 business days.</p>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="returns" className="pt-4 animate-fade-in">
-                  <div className="space-y-4">
-                    <p className="text-sm">We accept returns within 30 days of delivery.</p>
-                    <p className="text-sm">Items must be in original condition with tags attached.</p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+            
+            {/* Add to Cart Button */}
+            <Button className="w-full transition-transform duration-200 hover:scale-105" onClick={handleAddToCart}>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
+            </Button>
+            
+            {/* Measurements */}
+            {product.measurements && (
+              <p className="mt-4 text-sm text-gray-500">
+                Measurements: {product.measurements}
+              </p>
+            )}
           </div>
         </div>
-
+        
         {/* Similar Products */}
         {similarProducts && similarProducts.length > 0 && (
-          <div className="mb-12 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8">Similar Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {similarProducts.slice(0, 4).map((product) => (
-                <div key={product.id} className="transform transition-transform duration-300 hover:scale-105">
-                  <ProductCard 
-                    id={product.id}
-                    name={product.name}
-                    price={product.price}
-                    imageUrl={product.imageUrl || dummyImages[0]}
-                    category={product.category || ''}
-                  />
-                </div>
-              ))}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-4">Similar Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {isLoadingSimilar ? (
+                <div className="text-center py-4 col-span-full">Loading similar products...</div>
+              ) : (
+                similarProducts.map((similarProduct) => (
+                  <Card key={similarProduct.id} className="transition-transform duration-200 hover:scale-105">
+                    <CardHeader>
+                      <CardTitle>{similarProduct.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <img
+                        src={similarProduct.imageUrl}
+                        alt={similarProduct.name}
+                        className="w-full h-32 object-cover rounded-md mb-2"
+                      />
+                      <CardDescription>{formatCurrency(similarProduct.price)}</CardDescription>
+                    </CardContent>
+                    <CardFooter>
+                      <Button asChild variant="secondary">
+                        <Link to={`/products/${similarProduct.id}`}>View Product</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         )}
       </main>
+      
       <Footer />
     </>
   );
