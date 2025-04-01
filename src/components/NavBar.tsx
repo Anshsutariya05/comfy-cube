@@ -1,36 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Heart, Menu, X, User, Search, Cog } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
-  
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (!error && data && data.role === 'admin') {
-        setIsAdmin(true);
-      }
-    };
-    
-    checkAdmin();
-  }, [user]);
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

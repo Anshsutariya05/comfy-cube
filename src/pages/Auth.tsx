@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { toast } from 'sonner';
 import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   
   // If user is already logged in, redirect to homepage
   useEffect(() => {
@@ -29,21 +29,13 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      await signUp(email, password, firstName, lastName);
       
-      if (error) throw error;
-      
-      toast({
-        title: "Account created successfully",
+      toast.success("Account created successfully", {
         description: "Please check your email to verify your account.",
       });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error.message || "An error occurred during sign up.",
       });
     } finally {
@@ -56,18 +48,11 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
+      await signIn(email, password);
       
       navigate('/');
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: error.message || "Invalid login credentials.",
       });
     } finally {
@@ -76,8 +61,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+      <Card className="w-full max-w-md shadow-lg transition-all duration-300 hover:shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">ComfyCube</CardTitle>
           <CardDescription>Sign in to your account or create a new one</CardDescription>
@@ -85,8 +70,8 @@ const Auth = () => {
         
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin" className="transition-all duration-200">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="transition-all duration-200">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -100,6 +85,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your.email@example.com"
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     required
                   />
                 </div>
@@ -111,6 +97,7 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     required
                   />
                 </div>
@@ -118,10 +105,10 @@ const Auth = () => {
               <CardFooter>
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full transition-all duration-300 hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={loading}
                 >
-                  {loading ? "Loading..." : "Sign In"}
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </CardFooter>
             </form>
@@ -130,6 +117,30 @@ const Auth = () => {
           <TabsContent value="signup">
             <form onSubmit={handleSignUp}>
               <CardContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
+                    <Input
+                      id="first-name"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="John"
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
+                    <Input
+                      id="last-name"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Doe"
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <label htmlFor="signup-email" className="text-sm font-medium">Email</label>
                   <Input
@@ -138,6 +149,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your.email@example.com"
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     required
                   />
                 </div>
@@ -149,6 +161,7 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     required
                   />
                   <p className="text-xs text-muted-foreground">
@@ -159,10 +172,10 @@ const Auth = () => {
               <CardFooter>
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full transition-all duration-300 hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={loading}
                 >
-                  {loading ? "Loading..." : "Create Account"}
+                  {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </CardFooter>
             </form>
