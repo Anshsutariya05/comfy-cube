@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Use RPC call to get profile data
       const { data, error } = await supabase
-        .rpc('get_profile', { user_id: userId });
+        .rpc('get_profile', { user_id_param: userId });
       
       if (error) {
         console.error('Error fetching profile:', error);

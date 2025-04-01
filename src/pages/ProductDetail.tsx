@@ -49,25 +49,21 @@ const ProductDetail = () => {
     }
   };
 
-  const addToCart = async (product: Product, quantity: number) => {
+  const addToCart = async (productId: string, quantity: number) => {
     try {
-      await addToCartApi(product.id, quantity);
+      await addToCartApi(productId, quantity);
+      toast.success(`${quantity} × ${product.name} added to cart`, {
+        description: "Go to cart to checkout.",
+      });
     } catch (error: any) {
       toast.error(error.message);
     }
   };
 
   const handleAddToCart = () => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
-    }, quantity);
-    
-    toast.success(`${quantity} × ${product.name} added to cart`, {
-      description: "Go to cart to checkout.",
-    });
+    if (product) {
+      addToCart(product.id, quantity);
+    }
   };
 
   if (isLoading) {
