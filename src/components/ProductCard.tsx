@@ -43,6 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
     
     if (isWishlisted) {
       removeFromWishlist(id);
+      toast.success(`${name} removed from wishlist`);
     } else {
       addToWishlist({
         id,
@@ -51,35 +52,36 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
         imageUrl,
         category
       });
+      toast.success(`${name} added to wishlist`);
     }
     
     setIsWishlisted(!isWishlisted);
   };
   
   return (
-    <div className="product-card group animate-fade-in">
+    <div className="product-card group animate-fade-in hover:shadow-lg transition-all duration-300 rounded-lg overflow-hidden">
       <Link to={`/products/${id}`} className="block">
         <div className="relative overflow-hidden">
           <img 
             src={imageUrl || '/placeholder.svg'} 
             alt={name}
-            className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">
             <Button 
               size="icon" 
               variant="secondary" 
-              className="rounded-full opacity-70 hover:opacity-100"
+              className="rounded-full opacity-70 hover:opacity-100 transition-all duration-200 hover:scale-110"
               onClick={handleToggleWishlist}
             >
-              <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-destructive text-destructive' : ''}`} />
+              <Heart className={`h-5 w-5 transition-colors duration-300 ${isWishlisted ? 'fill-destructive text-destructive' : ''}`} />
               <span className="sr-only">
                 {isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               </span>
             </Button>
           </div>
         </div>
-        <div className="p-4">
+        <div className="p-4 bg-white transition-colors duration-300 group-hover:bg-muted/10">
           <p className="text-sm text-muted-foreground uppercase tracking-wider">{category}</p>
           <h3 className="font-medium mt-1 line-clamp-1">{name}</h3>
           <div className="mt-2 flex items-center justify-between">
@@ -87,7 +89,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
             <Button 
               size="sm" 
               variant="outline"
-              className="opacity-0 group-hover:opacity-100 transition-opacity" 
+              className="opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-105 transform" 
               onClick={handleAddToCart}
             >
               <ShoppingCart className="h-4 w-4 mr-2" />

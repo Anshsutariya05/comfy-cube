@@ -25,6 +25,8 @@ import {
   addToWishlist 
 } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +34,9 @@ const ProductDetail = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
+  const { addItem: addToCartContext } = useCart();
+  const { addItem: addToWishlistContext, isInWishlist, removeItem: removeFromWishlist } = useWishlist();
+  const [isWishlisted, setIsWishlisted] = useState(false);
   
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -39,6 +44,12 @@ const ProductDetail = () => {
     queryFn: () => fetchProductById(id!),
     enabled: !!id
   });
+
+  useEffect(() => {
+    if (product && id) {
+      setIsWishlisted(isInWishlist(id));
+    }
+  }, [id, product, isInWishlist]);
   
   // Fetch product reviews
   const { data: reviews, isLoading: isLoadingReviews } = useQuery({
@@ -67,40 +78,6 @@ const ProductDetail = () => {
     return category ? category.name : '';
   }, [product, categories]);
   
-  // Add to cart mutation
-  const addToCartMutation = useMutation({
-    mutationFn: () => addToCart(id!, quantity),
-    onSuccess: () => {
-      toast.success(`${product?.name} added to cart`);
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-    },
-    onError: (error: any) => {
-      if (error.message.includes('User must be logged in')) {
-        toast.error('Please sign in to add items to your cart');
-        navigate('/auth');
-      } else {
-        toast.error('Failed to add to cart');
-      }
-    }
-  });
-  
-  // Add to wishlist mutation
-  const addToWishlistMutation = useMutation({
-    mutationFn: () => addToWishlist(id!),
-    onSuccess: () => {
-      toast.success(`${product?.name} added to wishlist`);
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    },
-    onError: (error: any) => {
-      if (error.message.includes('User must be logged in')) {
-        toast.error('Please sign in to add items to your wishlist');
-        navigate('/auth');
-      } else {
-        toast.error('Failed to add to wishlist');
-      }
-    }
-  });
-  
   // Handle quantity changes
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -114,21 +91,45 @@ const ProductDetail = () => {
     }
   };
   
-  // Handle add to cart
+  // Handle add to cart - Use the context directly
   const handleAddToCart = () => {
-    addToCartMutation.mutate();
+    if (product) {
+      addToCartContext({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      });
+      toast.success(`${product.name} added to cart`);
+    }
   };
   
   // Handle add to wishlist
-  const handleAddToWishlist = () => {
-    addToWishlistMutation.mutate();
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+      toast.success(`${product.name} removed from wishlist`);
+    } else {
+      addToWishlistContext({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        category: categoryName
+      });
+      toast.success(`${product.name} added to wishlist`);
+    }
+    
+    setIsWishlisted(!isWishlisted);
   };
   
   return (
     <>
       <NavBar />
       
-      <main className="container py-8 mt-16">
+      <main className="container py-8 mt-16 animate-fade-in">
         {isLoading ? (
           <div className="text-center py-12">Loading product...</div>
         ) : !product ? (
@@ -167,16 +168,16 @@ const ProductDetail = () => {
             {/* Product info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {/* Product image */}
-              <div className="bg-muted/40 rounded-lg overflow-hidden">
+              <div className="bg-muted/40 rounded-lg overflow-hidden hover-scale transition-all duration-300">
                 <img 
                   src={product.imageUrl} 
                   alt={product.name} 
-                  className="w-full h-auto object-cover aspect-square"
+                  className="w-full h-auto object-cover aspect-square transition-all duration-500 hover:scale-105"
                 />
               </div>
               
               {/* Product details */}
-              <div>
+              <div className="animate-fade-in">
                 <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
                 
                 <div className="flex items-center mb-4">
@@ -184,7 +185,7 @@ const ProductDetail = () => {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star 
                         key={star}
-                        className={`h-5 w-5 ${
+                        className={`h-5 w-5 transition-all duration-300 ${
                           star <= Math.round(averageRating)
                             ? 'text-yellow-400 fill-yellow-400'
                             : 'text-gray-300'
@@ -203,7 +204,7 @@ const ProductDetail = () => {
                   {product.description}
                 </p>
                 
-                <div className="p-4 bg-muted/30 rounded-lg mb-6">
+                <div className="p-4 bg-muted/30 rounded-lg mb-6 hover:bg-muted/40 transition-colors duration-300">
                   <h3 className="font-medium mb-2">Dimensions</h3>
                   <p>{product.measurements}</p>
                 </div>
@@ -217,6 +218,7 @@ const ProductDetail = () => {
                       size="icon" 
                       onClick={decreaseQuantity}
                       disabled={quantity <= 1}
+                      className="transition-all duration-200 hover:bg-primary/10"
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -226,6 +228,7 @@ const ProductDetail = () => {
                       size="icon" 
                       onClick={increaseQuantity}
                       disabled={quantity >= product.quantity}
+                      className="transition-all duration-200 hover:bg-primary/10"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -238,40 +241,39 @@ const ProductDetail = () => {
                 {/* Action buttons */}
                 <div className="flex flex-wrap gap-4 mb-8">
                   <Button 
-                    className="flex-1" 
+                    className="flex-1 transition-transform duration-200 hover:scale-105 shadow-md hover:shadow-lg" 
                     onClick={handleAddToCart}
-                    disabled={addToCartMutation.isPending}
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
-                    {addToCartMutation.isPending ? 'Adding...' : 'Add to Cart'}
+                    Add to Cart
                   </Button>
                   
                   <Button 
-                    variant="outline" 
-                    onClick={handleAddToWishlist}
-                    disabled={addToWishlistMutation.isPending}
+                    variant={isWishlisted ? "default" : "outline"} 
+                    onClick={handleToggleWishlist}
+                    className="transition-all duration-200"
                   >
-                    <Heart className="h-5 w-5" />
-                    <span className="sr-only">Add to Wishlist</span>
+                    <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-white' : ''}`} />
+                    <span className="ml-2">{isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}</span>
                   </Button>
                   
-                  <Button variant="outline">
+                  <Button variant="outline" className="transition-transform duration-200 hover:scale-105">
                     <Share2 className="h-5 w-5" />
-                    <span className="sr-only">Share</span>
+                    <span className="ml-2">Share</span>
                   </Button>
                 </div>
                 
                 {/* Delivery info */}
-                <div className="space-y-4">
-                  <div className="flex items-center">
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted/30 transition-colors duration-300">
                     <Truck className="h-5 w-5 mr-2 text-muted-foreground" />
                     <span>Free delivery on orders over $100</span>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted/30 transition-colors duration-300">
                     <Undo2 className="h-5 w-5 mr-2 text-muted-foreground" />
                     <span>30-day return policy</span>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center p-2 rounded-md hover:bg-muted/30 transition-colors duration-300">
                     <Shield className="h-5 w-5 mr-2 text-muted-foreground" />
                     <span>5-year warranty included</span>
                   </div>
@@ -282,12 +284,12 @@ const ProductDetail = () => {
             {/* Tabs for details and reviews */}
             <Tabs defaultValue="details" className="mb-12">
               <TabsList className="w-full max-w-md">
-                <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-                <TabsTrigger value="reviews" className="flex-1">Reviews ({reviews?.length || 0})</TabsTrigger>
+                <TabsTrigger value="details" className="flex-1 transition-all duration-200">Details</TabsTrigger>
+                <TabsTrigger value="reviews" className="flex-1 transition-all duration-200">Reviews ({reviews?.length || 0})</TabsTrigger>
               </TabsList>
               
               <div className="mt-6">
-                <TabsContent value="details">
+                <TabsContent value="details" className="animate-fade-in">
                   <h2 className="text-xl font-bold mb-4">Product Details</h2>
                   <div className="space-y-4">
                     <p>{product.description}</p>
@@ -308,7 +310,7 @@ const ProductDetail = () => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="reviews">
+                <TabsContent value="reviews" className="animate-fade-in">
                   <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
                   
                   {isLoadingReviews ? (
@@ -316,7 +318,7 @@ const ProductDetail = () => {
                   ) : reviews && reviews.length > 0 ? (
                     <div className="space-y-6">
                       {/* Rating summary */}
-                      <div className="bg-muted/20 p-4 rounded-lg mb-6">
+                      <div className="bg-muted/20 p-4 rounded-lg mb-6 hover:bg-muted/30 transition-colors duration-300">
                         <div className="flex items-center">
                           <div className="text-4xl font-bold mr-4">{averageRating}</div>
                           <div>
@@ -324,7 +326,7 @@ const ProductDetail = () => {
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star 
                                   key={star}
-                                  className={`h-5 w-5 ${
+                                  className={`h-5 w-5 transition-colors duration-300 ${
                                     star <= Math.round(averageRating)
                                       ? 'text-yellow-400 fill-yellow-400'
                                       : 'text-gray-300'
@@ -341,7 +343,7 @@ const ProductDetail = () => {
                       
                       {/* Review list */}
                       {reviews.map((review) => (
-                        <div key={review.id} className="pb-6 border-b">
+                        <div key={review.id} className="pb-6 border-b hover:bg-muted/5 p-3 rounded-lg transition-colors duration-300">
                           <div className="flex justify-between mb-2">
                             <div className="flex items-center">
                               {[1, 2, 3, 4, 5].map((star) => (
@@ -370,11 +372,11 @@ const ProductDetail = () => {
                     <div className="text-center py-8">
                       <p className="mb-4">No reviews yet. Be the first to review this product!</p>
                       {user ? (
-                        <Button asChild>
+                        <Button asChild className="transition-transform duration-200 hover:scale-105">
                           <Link to={`/products/${id}/review`}>Write a Review</Link>
                         </Button>
                       ) : (
-                        <Button asChild>
+                        <Button asChild className="transition-transform duration-200 hover:scale-105">
                           <Link to="/auth">Sign in to Leave a Review</Link>
                         </Button>
                       )}
