@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from 'sonner';
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,6 +17,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [role, setRole] = useState('user');
   
   // If user is already logged in, redirect to homepage
   useEffect(() => {
@@ -29,7 +31,7 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      await signUp(email, password, firstName, lastName);
+      await signUp(email, password, firstName, lastName, role);
       
       toast.success("Account created successfully", {
         description: "Please check your email to verify your account.",
@@ -167,6 +169,23 @@ const Auth = () => {
                   <p className="text-xs text-muted-foreground">
                     Password must be at least 6 characters.
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Role</label>
+                  <RadioGroup 
+                    value={role} 
+                    onValueChange={setRole}
+                    className="flex flex-col space-y-2 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="user" id="user-role" />
+                      <label htmlFor="user-role" className="text-sm">User</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="admin" id="admin-role" />
+                      <label htmlFor="admin-role" className="text-sm">Admin</label>
+                    </div>
+                  </RadioGroup>
                 </div>
               </CardContent>
               <CardFooter>
