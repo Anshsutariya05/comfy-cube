@@ -45,7 +45,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
       
-      return data as Profile;
+      // Cast the data to Profile type after validation
+      const profileData = data as unknown;
+      
+      // Basic validation to ensure the data has the required structure
+      if (
+        profileData && 
+        typeof profileData === 'object' &&
+        'id' in profileData &&
+        'email' in profileData
+      ) {
+        return profileData as Profile;
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       return null;
