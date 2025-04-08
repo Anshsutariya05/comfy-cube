@@ -1,30 +1,37 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from 'sonner';
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState('user');
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState("user");
+  console.log("email", email);
+
   // If user is already logged in, redirect to homepage
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate("/");
     }
+    console.log();
   }, [user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -35,12 +42,12 @@ const Auth = () => {
       });
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       await signUp(email, password, firstName, lastName, role);
-      
+
       // Don't navigate automatically - wait for email verification
       toast.success("Account created successfully", {
         description: "Please check your email for verification.",
@@ -58,12 +65,12 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       await signIn(email, password);
-      
+
       toast.success("Signed in successfully");
-      navigate('/');
+      navigate("/");
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error("Error", {
@@ -79,20 +86,28 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-lg transition-all duration-300 hover:shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">ComfyCube</CardTitle>
-          <CardDescription>Sign in to your account or create a new one</CardDescription>
+          <CardDescription>
+            Sign in to your account or create a new one
+          </CardDescription>
         </CardHeader>
-        
+
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin" className="transition-all duration-200">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" className="transition-all duration-200">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin" className="transition-all duration-200">
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger value="signup" className="transition-all duration-200">
+              Sign Up
+            </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="signin">
             <form onSubmit={handleSignIn}>
               <CardContent className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">Email</label>
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </label>
                   <Input
                     id="email"
                     type="email"
@@ -104,7 +119,9 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium">Password</label>
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
                   <Input
                     id="password"
                     type="password"
@@ -127,18 +144,22 @@ const Auth = () => {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
                     </>
-                  ) : "Sign In"}
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
-          
+
           <TabsContent value="signup">
             <form onSubmit={handleSignUp}>
               <CardContent className="space-y-4 pt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
+                    <label htmlFor="first-name" className="text-sm font-medium">
+                      First Name
+                    </label>
                     <Input
                       id="first-name"
                       type="text"
@@ -149,7 +170,9 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
+                    <label htmlFor="last-name" className="text-sm font-medium">
+                      Last Name
+                    </label>
                     <Input
                       id="last-name"
                       type="text"
@@ -161,7 +184,9 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="signup-email" className="text-sm font-medium">Email</label>
+                  <label htmlFor="signup-email" className="text-sm font-medium">
+                    Email
+                  </label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -173,7 +198,12 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="signup-password" className="text-sm font-medium">Password</label>
+                  <label
+                    htmlFor="signup-password"
+                    className="text-sm font-medium"
+                  >
+                    Password
+                  </label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -187,23 +217,6 @@ const Auth = () => {
                     Password must be at least 6 characters.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Role</label>
-                  <RadioGroup 
-                    value={role} 
-                    onValueChange={setRole}
-                    className="flex flex-col space-y-2 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="user" id="user-role" />
-                      <label htmlFor="user-role" className="text-sm">User</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="admin" id="admin-role" />
-                      <label htmlFor="admin-role" className="text-sm">Admin</label>
-                    </div>
-                  </RadioGroup>
-                </div>
               </CardContent>
               <CardFooter>
                 <Button
@@ -216,7 +229,9 @@ const Auth = () => {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating Account...
                     </>
-                  ) : "Create Account"}
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </CardFooter>
             </form>
