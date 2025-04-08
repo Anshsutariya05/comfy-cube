@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from 'sonner';
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -28,15 +29,24 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) {
+      toast.error("Invalid password", {
+        description: "Password must be at least 6 characters.",
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
       await signUp(email, password, firstName, lastName, role);
       
+      // Don't navigate automatically - wait for email verification
       toast.success("Account created successfully", {
-        description: "Please check your email to verify your account.",
+        description: "Please check your email for verification.",
       });
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast.error("Error", {
         description: error.message || "An error occurred during sign up.",
       });
@@ -52,8 +62,10 @@ const Auth = () => {
     try {
       await signIn(email, password);
       
+      toast.success("Signed in successfully");
       navigate('/');
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast.error("Error", {
         description: error.message || "Invalid login credentials.",
       });
@@ -110,7 +122,12 @@ const Auth = () => {
                   className="w-full transition-all duration-300 hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={loading}
                 >
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : "Sign In"}
                 </Button>
               </CardFooter>
             </form>
@@ -194,7 +211,12 @@ const Auth = () => {
                   className="w-full transition-all duration-300 hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
                   disabled={loading}
                 >
-                  {loading ? "Creating Account..." : "Create Account"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : "Create Account"}
                 </Button>
               </CardFooter>
             </form>
