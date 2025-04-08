@@ -6,11 +6,12 @@ interface CategoryCardProps {
   name: string;
   imageUrl: string;
   count: number;
+  
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ name, imageUrl, count }) => {
   const slug = name.toLowerCase().replace(/\s+/g, '-');
-  
+  console.log("asdsad",imageUrl)
   return (
     <Link 
       to={`/categories/${slug}`} 
