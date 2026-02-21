@@ -18,6 +18,9 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
   created_at?: string;
 }
 
@@ -102,6 +105,21 @@ export const fetchCategories = async (): Promise<Category[]> => {
     throw error;
   }
   
+  return data;
+};
+
+// Get a single category by slug
+export const fetchCategoryBySlug = async (slug: string): Promise<Category | null> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`Error fetching category by slug "${slug}":`, error);
+    throw error;
+  }
   return data;
 };
 

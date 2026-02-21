@@ -31,11 +31,12 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories, produ
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories?.map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                name={category.name} 
-                imageUrl={`https://source.unsplash.com/featured/?${category.name.toLowerCase()},furniture`} 
-                count={products?.filter(p => p.category_id === category.id).length || 0} 
+              <CategoryCard
+                key={category.id}
+                name={category.name}
+                slug={category.slug}
+                imageUrl={category.image_url || '/placeholder.svg'}
+                count={products?.filter(p => p.category_id === category.id).length || 0}
               />
             ))}
           </div>

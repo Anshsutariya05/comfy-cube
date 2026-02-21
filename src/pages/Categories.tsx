@@ -70,11 +70,12 @@ const Categories = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {categories?.map((category) => (
-              <CategoryCard 
-                key={category.id} 
-                name={category.name} 
-                imageUrl={`https://cdn.discordapp.com/attachments/905019343841140786/1359091708612313179/photo-1505409628601-edc9af17fda6.png?ex=67f6384a&is=67f4e6ca&hm=ab792964c27e12ca20626fd9328ee00b3a9510d0a8b7c721b824c439dd126488&`} 
-                count={productCounts[category.id] || 0} 
+              <CategoryCard
+                key={category.id}
+                name={category.name}
+                slug={category.slug}
+                imageUrl={category.image_url || '/placeholder.svg'}
+                count={productCounts[category.id] || 0}
               />
             ))}
           </div>

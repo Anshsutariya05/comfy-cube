@@ -31,9 +31,7 @@ const CategoryDetail = () => {
   // Find category by slug
   const category = React.useMemo(() => {
     if (!categories) return null;
-    return categories.find(cat => 
-      cat.name.toLowerCase().replace(/\s+/g, '-') === slug
-    );
+    return categories.find(cat => cat.slug === slug);
   }, [categories, slug]);
   
   // Filter products by category
@@ -82,8 +80,8 @@ const CategoryDetail = () => {
             {/* Category Header */}
             <div className="relative h-64 mb-8 overflow-hidden rounded-lg">
               <div className="absolute inset-0 bg-black/30 z-10"></div>
-              <img 
-                src={`https://source.unsplash.com/featured/?${category.name.toLowerCase()},furniture`} 
+              <img
+                src={category.image_url || `https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1200&q=80`}
                 alt={category.name}
                 className="w-full h-full object-cover object-center"
               />
