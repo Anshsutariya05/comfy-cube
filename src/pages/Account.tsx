@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from 'sonner';
 import { User, Package, CreditCard, Heart, LogOut, Settings } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 const Account = () => {
   const { user, signOut } = useAuth();
@@ -352,7 +353,7 @@ const Account = () => {
                               </p>
                             </div>
                             <div className="mt-4 md:mt-0">
-                              <span className="font-semibold">${order.total.toFixed(2)}</span>
+                              <span className="font-semibold">{formatCurrency(order.total)}</span>
                             </div>
                           </div>
                           <div className="flex gap-2">

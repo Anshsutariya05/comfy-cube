@@ -28,11 +28,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
+import { formatCurrency } from "@/lib/utils";
 import { fetchCategories, fetchProducts } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import { SlidersHorizontal } from "lucide-react";
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+const MAX_PRODUCT_PRICE = 100000;
 
 const Products = () => {
   const location = useLocation();
@@ -46,7 +49,7 @@ const Products = () => {
   );
   const [priceRange, setPriceRange] = useState<[number, number]>([
     parseInt(queryParams.get("minPrice") || "0"),
-    parseInt(queryParams.get("maxPrice") || "2000"),
+    parseInt(queryParams.get("maxPrice") || MAX_PRODUCT_PRICE.toString()),
   ]);
   const [sortBy, setSortBy] = useState(
     queryParams.get("sort") || "recommended"
@@ -118,7 +121,7 @@ const Products = () => {
   const resetFilters = () => {
     setSearchQuery("");
     setCategoryFilter("");
-    setPriceRange([0, 2000]);
+    setPriceRange([0, MAX_PRODUCT_PRICE]);
     setSortBy("recommended");
     navigate("/products");
   };
@@ -222,16 +225,16 @@ const Products = () => {
                       <Slider
                         defaultValue={priceRange}
                         min={0}
-                        max={2000}
-                        step={10}
+                        max={MAX_PRODUCT_PRICE}
+                        step={1000}
                         value={priceRange}
                         onValueChange={(value) =>
                           setPriceRange(value as [number, number])
                         }
                       />
                       <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                        <span>${priceRange[0]}</span>
-                        <span>${priceRange[1]}</span>
+                        <span>{formatCurrency(priceRange[0])}</span>
+                        <span>{formatCurrency(priceRange[1])}</span>
                       </div>
                     </div>
                   </div>
@@ -301,16 +304,16 @@ const Products = () => {
                 <Slider
                   defaultValue={priceRange}
                   min={0}
-                  max={2000}
-                  step={10}
+                  max={MAX_PRODUCT_PRICE}
+                  step={1000}
                   value={priceRange}
                   onValueChange={(value) =>
                     setPriceRange(value as [number, number])
                   }
                 />
                 <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                  <span>${priceRange[0]}</span>
-                  <span>${priceRange[1]}</span>
+                  <span>{formatCurrency(priceRange[0])}</span>
+                  <span>{formatCurrency(priceRange[1])}</span>
                 </div>
               </div>
             </div>

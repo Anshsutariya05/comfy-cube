@@ -27,10 +27,10 @@ export interface Category {
 export interface Review {
   id: string;
   product_id: string;
-  user_id?: string;
+  user_id?: string | null;
   rating: number;
   comment: string;
-  created_at?: string;
+  created_at?: string | null;
 }
 
 // Get all products
@@ -146,14 +146,15 @@ export const fetchProductReviews = async (productId: string): Promise<Review[]> 
   const { data, error } = await supabase
     .from('reviews')
     .select('*')
-    .eq('product_id', productId);
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false });
   
   if (error) {
     console.error(`Error fetching reviews for product ${productId}:`, error);
     throw error;
   }
   
-  return data;
+  return data ?? [];
 };
 
 // Add a review for a product

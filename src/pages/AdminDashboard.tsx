@@ -47,6 +47,7 @@ import { fetchProducts, fetchCategories, Product, Category } from '@/services/ap
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatCurrency } from '@/lib/utils';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -430,15 +431,15 @@ const AdminDashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="price" className="text-sm font-medium">Price ($)</label>
+                        <label htmlFor="price" className="text-sm font-medium">Price (₹)</label>
                         <Input 
                           id="price" 
                           name="price" 
                           type="number"
-                          step="0.01"
+                          step="1"
                           value={productForm.price} 
                           onChange={handleProductFormChange}
-                          placeholder="199.99"
+                          placeholder="49999"
                         />
                       </div>
                     </div>
@@ -562,7 +563,7 @@ const AdminDashboard = () => {
                               />
                             </TableCell>
                             <TableCell className="font-medium">{product.name}</TableCell>
-                            <TableCell>${product.price.toFixed(2)}</TableCell>
+                            <TableCell>{formatCurrency(product.price)}</TableCell>
                             <TableCell>{product.quantity}</TableCell>
                             <TableCell>{category?.name || 'Uncategorized'}</TableCell>
                             <TableCell className="flex space-x-2">

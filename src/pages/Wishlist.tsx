@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2, ShoppingCart, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/utils';
 
 const Wishlist = () => {
   const { items, removeItem, clearWishlist } = useWishlist();
@@ -112,7 +113,7 @@ const Wishlist = () => {
                   </Link>
                   <p className="text-sm text-muted-foreground mb-2">{item.category}</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold">${item.price.toFixed(2)}</span>
+                    <span className="font-semibold">{formatCurrency(item.price)}</span>
                     <Button
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 transition-opacity"

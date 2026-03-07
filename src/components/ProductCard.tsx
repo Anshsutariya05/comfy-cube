@@ -6,6 +6,7 @@ import { Heart, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProductCardProps {
   id: string;
@@ -85,7 +86,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, name, price, imageUrl, ca
           <p className="text-sm text-muted-foreground uppercase tracking-wider">{category}</p>
           <h3 className="font-medium mt-1 line-clamp-1">{name}</h3>
           <div className="mt-2 flex items-center justify-between">
-            <span className="font-semibold">${price.toFixed(2)}</span>
+            <span className="font-semibold">{formatCurrency(price)}</span>
             <Button 
               size="sm" 
               variant="outline"

@@ -17,9 +17,16 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
+
+const FREE_SHIPPING_THRESHOLD = 50000;
+const STANDARD_SHIPPING_FEE = 1500;
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, clearCart, total } = useCart();
+  const shippingCost = total >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
+  const tax = total * 0.08;
+  const grandTotal = total + shippingCost + tax;
   
   const handleQuantityChange = (id: string, value: string) => {
     const quantity = parseInt(value);
@@ -96,7 +103,7 @@ const Cart = () => {
                       <TableCell>
                         <h3 className="font-medium">{item.name}</h3>
                       </TableCell>
-                      <TableCell>${item.price.toFixed(2)}</TableCell>
+                      <TableCell>{formatCurrency(item.price)}</TableCell>
                       <TableCell>
                         <div className="flex items-center w-32">
                           <Button
@@ -126,7 +133,7 @@ const Cart = () => {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatCurrency(item.price * item.quantity)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -158,15 +165,15 @@ const Cart = () => {
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{total > 100 ? 'Free' : '$10.00'}</span>
+                    <span>{shippingCost === 0 ? 'Free' : formatCurrency(shippingCost)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${(total * 0.08).toFixed(2)}</span>
+                    <span>{formatCurrency(tax)}</span>
                   </div>
                 </div>
                 
@@ -174,9 +181,7 @@ const Cart = () => {
                 
                 <div className="flex justify-between font-semibold text-lg mb-6">
                   <span>Total</span>
-                  <span>
-                    ${(total + (total > 100 ? 0 : 10) + (total * 0.08)).toFixed(2)}
-                  </span>
+                  <span>{formatCurrency(grandTotal)}</span>
                 </div>
                 
                 <Button className="w-full" size="lg">
