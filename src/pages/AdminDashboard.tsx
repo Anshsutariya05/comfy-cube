@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,6 +47,13 @@ import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/lib/utils';
+
+const createCategorySlug = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -119,7 +125,16 @@ const AdminDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toast.success('Product added successfully');
       setIsAddProductDialogOpen(false);
-      resetProductForm();
+      setSelectedProduct(null);
+      setProductForm({
+        name: '',
+        description: '',
+        price: '',
+        quantity: '',
+        imageUrl: '',
+        measurements: '',
+        categoryId: ''
+      });
     },
     onError: (error: any) => {
       toast.error(`Failed to add product: ${error.message}`);
@@ -151,7 +166,15 @@ const AdminDashboard = () => {
       toast.success('Product updated successfully');
       setIsAddProductDialogOpen(false);
       setSelectedProduct(null);
-      resetProductForm();
+      setProductForm({
+        name: '',
+        description: '',
+        price: '',
+        quantity: '',
+        imageUrl: '',
+        measurements: '',
+        categoryId: ''
+      });
     },
     onError: (error: any) => {
       toast.error(`Failed to update product: ${error.message}`);
@@ -191,7 +214,7 @@ const AdminDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category added successfully');
       setIsAddCategoryDialogOpen(false);
-      setCategoryForm({ name: '' });
+      resetCategoryForm();
     },
     onError: (error: any) => {
       toast.error(`Failed to add category: ${error.message}`);
@@ -214,8 +237,7 @@ const AdminDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category updated successfully');
       setIsAddCategoryDialogOpen(false);
-      setSelectedCategory(null);
-      setCategoryForm({ name: '' });
+      resetCategoryForm();
     },
     onError: (error: any) => {
       toast.error(`Failed to update category: ${error.message}`);
@@ -287,7 +309,14 @@ const AdminDashboard = () => {
   };
   
   const handleAddCategory = () => {
-    addCategoryMutation.mutate({ name: categoryForm.name });
+    const trimmedName = categoryForm.name.trim();
+
+    if (!trimmedName) return;
+
+    addCategoryMutation.mutate({
+      name: trimmedName,
+      slug: createCategorySlug(trimmedName)
+    });
   };
   
   const handleUpdateCategory = () => {
@@ -320,6 +349,24 @@ const AdminDashboard = () => {
     setCategoryForm({ name: category.name });
     setIsAddCategoryDialogOpen(true);
   };
+
+  const resetCategoryForm = () => {
+    setCategoryForm({ name: '' });
+    setSelectedCategory(null);
+  };
+
+  const handleCategoryDialogChange = (open: boolean) => {
+    setIsAddCategoryDialogOpen(open);
+
+    if (!open) {
+      resetCategoryForm();
+    }
+  };
+
+  const openAddCategoryDialog = () => {
+    resetCategoryForm();
+    setIsAddCategoryDialogOpen(true);
+  };
   
   const resetProductForm = () => {
     setProductForm({
@@ -332,6 +379,18 @@ const AdminDashboard = () => {
       categoryId: ''
     });
     setSelectedProduct(null);
+  };
+
+  const handleProductDialogChange = (open: boolean) => {
+    setIsAddProductDialogOpen(open);
+    if (!open) {
+      resetProductForm();
+    }
+  };
+
+  const openAddProductDialog = () => {
+    resetProductForm();
+    setIsAddProductDialogOpen(true);
   };
   
   if (authLoading) {
@@ -403,9 +462,9 @@ const AdminDashboard = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
+              <Dialog open={isAddProductDialogOpen} onOpenChange={handleProductDialogChange}>
                 <DialogTrigger asChild>
-                  <Button className="transition-transform duration-200 hover:scale-105">
+                  <Button className="transition-transform duration-200 hover:scale-105" onClick={openAddProductDialog}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
@@ -435,10 +494,13 @@ const AdminDashboard = () => {
                         <Input 
                           id="price" 
                           name="price" 
-                          type="number"
-                          step="1"
+                          type="text"
+                          inputMode="numeric"
                           value={productForm.price} 
-                          onChange={handleProductFormChange}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/,/g, '');
+                            setProductForm(prev => ({ ...prev, price: raw }));
+                          }}
                           placeholder="49999"
                         />
                       </div>
@@ -514,10 +576,10 @@ const AdminDashboard = () => {
                   </div>
                   
                   <DialogFooter>
-                    <Button variant="outline" onClick={resetProductForm}>Cancel</Button>
+                    <Button variant="outline" onClick={() => handleProductDialogChange(false)}>Cancel</Button>
                     <Button 
                       onClick={selectedProduct ? handleUpdateProduct : handleAddProduct}
-                      disabled={!productForm.name || !productForm.price || !productForm.description}
+                      disabled={!productForm.name || !productForm.price || isNaN(parseFloat(productForm.price)) || !productForm.description}
                     >
                       {selectedProduct ? 'Update Product' : 'Add Product'}
                     </Button>
@@ -601,9 +663,9 @@ const AdminDashboard = () => {
           <TabsContent value="categories" className="space-y-6 animate-fade-in">
             {/* Add Category */}
             <div className="flex justify-end">
-              <Dialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen}>
+              <Dialog open={isAddCategoryDialogOpen} onOpenChange={handleCategoryDialogChange}>
                 <DialogTrigger asChild>
-                  <Button className="transition-transform duration-200 hover:scale-105">
+                  <Button className="transition-transform duration-200 hover:scale-105" onClick={openAddCategoryDialog}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Category
                   </Button>
@@ -632,16 +694,13 @@ const AdminDashboard = () => {
                   <DialogFooter>
                     <Button 
                       variant="outline" 
-                      onClick={() => {
-                        setCategoryForm({ name: '' });
-                        setSelectedCategory(null);
-                      }}
+                      onClick={resetCategoryForm}
                     >
                       Cancel
                     </Button>
                     <Button 
                       onClick={selectedCategory ? handleUpdateCategory : handleAddCategory}
-                      disabled={!categoryForm.name}
+                      disabled={!categoryForm.name.trim()}
                     >
                       {selectedCategory ? 'Update Category' : 'Add Category'}
                     </Button>
