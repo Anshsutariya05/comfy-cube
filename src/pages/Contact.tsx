@@ -80,15 +80,15 @@ const Contact = () => {
             <div className="p-6 bg-muted/30 rounded-lg text-center">
               <Phone className="mx-auto h-8 w-8 mb-3 text-primary" />
               <h3 className="font-medium text-lg mb-2">Phone</h3>
-              <p className="text-muted-foreground">Toll-free: (800) 123-4567</p>
-              <p className="text-muted-foreground">International: +1 (555) 987-6543</p>
+              <p className="text-muted-foreground">Toll-free: (+91) 123-4567</p>
+              <p className="text-muted-foreground">+91 9876546543</p>
             </div>
             
             <div className="p-6 bg-muted/30 rounded-lg text-center">
               <MapPin className="mx-auto h-8 w-8 mb-3 text-primary" />
               <h3 className="font-medium text-lg mb-2">Visit Us</h3>
-              <p className="text-muted-foreground">123 Design District Avenue</p>
-              <p className="text-muted-foreground">San Francisco, CA 94103</p>
+              <p className="text-muted-foreground">Ahemdabad</p>
+              <p className="text-muted-foreground">Gujarat, India</p>
             </div>
           </div>
           
