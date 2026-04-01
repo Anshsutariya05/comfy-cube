@@ -500,7 +500,7 @@ const Account = () => {
                   <Separator />
 
                   <div>
-                    <h3 className="text-lg font-medium mb-2 text-destructive">Danger Zone</h3>
+                    <h3 className="text-lg font-medium mb-2 text-destructive">Manage Account</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Once you delete your account, there is no going back. Please be certain.
                     </p>

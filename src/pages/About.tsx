@@ -81,7 +81,7 @@ const About = () => {
           </div>
           
           <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Meet Our Team</h2>
+            {/* <h2 className="text-2xl font-semibold mb-4">Meet Our Team</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto bg-muted overflow-hidden mb-4">
@@ -106,7 +106,7 @@ const About = () => {
                 <h3 className="font-medium">Sarah Chen</h3>
                 <p className="text-muted-foreground">Head of Sustainability</p>
               </div>
-            </div>
+            </div> */}
           </div>
           
           <div>
@@ -114,14 +114,14 @@ const About = () => {
             <p className="mb-4">
               Experience our furniture in person at our flagship showroom. Our design consultants are available to help you find the perfect pieces for your home.
             </p>
-            <div className="bg-muted/30 p-6 rounded-lg">
+            {/* <div className="bg-muted/30 p-6 rounded-lg">
               <h3 className="font-medium mb-2">ComfyCube Showroom</h3>
               <p className="mb-1">123 Design District Avenue</p>
               <p className="mb-1">San Francisco, CA 94103</p>
               <p className="mb-3">United States</p>
               <p className="mb-1">Hours: Monday to Saturday, 10am - 7pm</p>
               <p>Phone: (555) 123-4567</p>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>
