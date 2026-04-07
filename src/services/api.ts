@@ -1,10 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// --- CONFIGURATION ---
-// Set your desired Gemini model here. "gemini-1.5-flash" is the correct model ID.
-const CHATBOT_MODEL = "gemini-3-flash-preview";
-// ---------------------
 
 // Product Types
 export interface Product {
@@ -463,51 +457,4 @@ export const fetchOrderDetails = async (orderId: string) => {
   };
 };
 
-// --- Chatbot Service ---
 
-/**
- * Defines the structure for a message in the chat history.
- */
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-}
-
-// Initialize Gemini AI client (Assumes GEMINI_API_KEY is set in environment variables)
-const genAI = import.meta.env.VITE_GEMINI_API_KEY ? new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY) : null;
-
-/**
- * Placeholder function to simulate calling an external AI Chatbot API.
- * In a real application, this would use fetch() or a dedicated SDK (e.g., OpenAI, Gemini).
- * @param message The user's latest message.
- * @param history The conversation history.
- * @returns A promise that resolves with the AI's response text.
- */
-export const getChatbotResponse = async (message: string, history: ChatMessage[]): Promise<string> => {
-  if (!genAI) {
-    throw new Error("Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your .env file.");
-  }
-
-  // 1. Prepare the chat history for the Gemini API (skip system messages)
-  const chatHistory = history
-    .filter(msg => msg.role !== 'system')
-    .map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model', // Gemini uses 'model' for assistant responses
-      parts: [{ text: msg.content }],
-    }));
-
-  // 2. Start a chat session with the model
-  const model = genAI.getGenerativeModel({ model: CHATBOT_MODEL });
-  
-  // Note: For a true multi-turn chat, you should use model.startChat() and send messages sequentially.
-  // For simplicity here, we'll send the whole history + new message to get a single response.
-  const chat = model.startChat({ history: chatHistory });
-
-  // 3. Send the user's latest message
-  const result = await chat.sendMessage(message);
-  const response = await result.response;
-  const text = response.text();
-  
-  return text;
-};

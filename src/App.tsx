@@ -7,8 +7,6 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
-import { ChatProvider } from "./contexts/ChatContext";
-import ChatWidget from "./components/ChatWidget";
 
 // Pages
 import About from "./pages/About";
@@ -34,7 +32,6 @@ const App = () => (
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <ChatProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -64,8 +61,6 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
-              <ChatWidget />
-            </ChatProvider>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>
