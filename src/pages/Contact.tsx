@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import emailjs from '@emailjs/browser';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { 
@@ -28,6 +29,7 @@ const formSchema = z.object({
 });
 
 const Contact = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,10 +40,39 @@ const Contact = () => {
     }
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
-    toast.success('Your message has been sent! We\'ll get back to you soon.');
-    form.reset();
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    try {
+      // EmailJS configuration
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error('EmailJS configuration is missing. Please check your environment variables.');
+      }
+
+      // Prepare email data
+      const emailData = {
+        from_name: data.name,
+        from_email: data.email,
+        to_email: '2201031000082@silveroakuni.ac.in', // Your personal email
+        subject: data.subject,
+        message: data.message,
+        reply_to: data.email,
+      };
+
+      // Send email using EmailJS
+      await emailjs.send(serviceId, templateId, emailData, publicKey);
+
+      toast.success('Your message has been sent! We\'ll get back to you soon.');
+      form.reset();
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send message. Please try again or contact us directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -73,7 +104,7 @@ const Contact = () => {
             <div className="p-6 bg-muted/30 rounded-lg text-center">
               <Mail className="mx-auto h-8 w-8 mb-3 text-primary" />
               <h3 className="font-medium text-lg mb-2">Email</h3>
-              <p className="text-muted-foreground">support@comfycube.com</p>
+              <p className="text-muted-foreground">2201031000082@silveroakuni.ac.in</p>
               <p className="text-muted-foreground">sales@comfycube.com</p>
             </div>
             
@@ -155,7 +186,9 @@ const Contact = () => {
                     />
                   </div>
                   
-                  <Button type="submit">Send Message</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </Button>
                 </form>
               </Form>
             </div>
