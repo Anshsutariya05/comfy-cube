@@ -56,7 +56,7 @@ const Contact = () => {
       const emailData = {
         from_name: data.name,
         from_email: data.email,
-        to_email: '2201031000082@silveroakuni.ac.in', // Your personal email
+        to_email: 'support.comfycube@gmail.com', // Your personal email
         subject: data.subject,
         message: data.message,
         reply_to: data.email,
@@ -104,7 +104,7 @@ const Contact = () => {
             <div className="p-6 bg-muted/30 rounded-lg text-center">
               <Mail className="mx-auto h-8 w-8 mb-3 text-primary" />
               <h3 className="font-medium text-lg mb-2">Email</h3>
-              <p className="text-muted-foreground">2201031000082@silveroakuni.ac.in</p>
+              <p className="text-muted-foreground">support.comfycube@gmail.com</p>
               <p className="text-muted-foreground">sales@comfycube.com</p>
             </div>
             
