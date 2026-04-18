@@ -1,9 +1,10 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import PayPalButton from '@/components/PayPalButton';
 import { 
   Breadcrumb, 
   BreadcrumbItem, 
@@ -18,12 +19,17 @@ import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
+import { PaymentDetails } from '@/services/paypal';
 
 const FREE_SHIPPING_THRESHOLD = 50000;
 const STANDARD_SHIPPING_FEE = 1500;
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, clearCart, total } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const shippingCost = total >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
   const tax = total * 0.08;
   const grandTotal = total + shippingCost + tax;
@@ -39,10 +45,28 @@ const Cart = () => {
     updateQuantity(id, currentQuantity + 1);
   };
   
-  const handleDecrementQuantity = (id: string, currentQuantity: number) => {
-    if (currentQuantity > 1) {
-      updateQuantity(id, currentQuantity - 1);
-    }
+  const handlePaymentSuccess = (orderId: string) => {
+    setIsProcessing(false);
+    clearCart();
+    navigate(`/account?order=${orderId}`);
+  };
+
+  const handlePaymentError = (error: Error) => {
+    setIsProcessing(false);
+    console.error('Payment error:', error);
+  };
+
+  const paymentDetails: PaymentDetails = {
+    amount: Math.round(grandTotal),
+    currency: 'INR',
+    orderId: `ORDER-${Date.now()}`,
+    items: items.map(item => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    shipping: shippingCost,
+    tax: Math.round(tax),
   };
   
   return (
@@ -184,9 +208,26 @@ const Cart = () => {
                   <span>{formatCurrency(grandTotal)}</span>
                 </div>
                 
-                <Button className="w-full" size="lg">
-                  Proceed to Checkout
-                </Button>
+                {user ? (
+                  <PayPalButton
+                    paymentDetails={paymentDetails}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    disabled={isProcessing || items.length === 0}
+                    cartItems={items}
+                    total={total}
+                    shipping={shippingCost}
+                    tax={Math.round(tax)}
+                  />
+                ) : (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Sign in to Checkout
+                  </Button>
+                )}
                 
                 <div className="mt-6 text-sm text-muted-foreground">
                   <p className="mb-2">We accept:</p>
